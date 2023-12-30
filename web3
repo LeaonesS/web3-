@@ -1,0 +1,42 @@
+from web3 import Web3
+from web3.middleware import geth_poa_middleware
+
+# Настройки
+infura_url = 'https://optimism-mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID'  # Замените на ваш Infura URL
+private_key = 'YOUR_PRIVATE_KEY'  # Замените на ваш приватный ключ
+contract_address = 'CONTRACT_ADDRESS'  # Замените на адрес вашего ERC-721 контракта на сети Optimism
+
+# Устанавливаем подключение к сети Ethereum (Optimism)
+w3 = Web3(Web3.HTTPProvider(infura_url))
+w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+
+# Получаем аккаунт
+account = w3.eth.account.from_key(private_key)
+
+# Адрес и ABI вашего ERC-721 контракта на сети Optimism
+contract_abi = [
+    # Сюда нужно добавить ABI вашего ERC-721 контракта
+]
+
+# Функция для создания NFT
+def create_nft(token_id, token_uri):
+    try:
+        # Создаем экземпляр контракта ERC-721
+        contract = w3.eth.contract(address=contract_address, abi=contract_abi)
+
+        # Отправляем транзакцию для создания NFT
+        tx_hash = contract.functions.mint(account.address, token_id, token_uri).transact({
+            'from': account.address,
+            'gas': 1000000,  # Установите подходящий лимит газа
+            'gasPrice': w3.toWei('10', 'gwei'),  # Установите цену газа
+        })
+
+        # Получаем хэш транзакции
+        tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+        print(f"NFT с токеном {token_id} успешно создан: {tx_receipt.transactionHash.hex()}")
+
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+
+# Вызываем функцию для создания NFT
+create_nft(1, 'https://example.com/tokenuri')
